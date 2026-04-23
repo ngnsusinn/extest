@@ -2111,7 +2111,9 @@ Ta chọn đáp án \circEX{E}
 \end{center}
 }
 %randombank
+\gdef\randombanklist{}
 \newcommand{\randombank}[1]{
+\gdef\randombanklist{#1}%
 \foreach \x in {#1} {%Danh sách mã đề
 \newpage
 \pagestyle{fancy}
@@ -2253,8 +2255,11 @@ Ta chọn đáp án \circEX{E}
 \showgridone
 \vspace{0.3cm}%
 }
-\newcommand{\showans}[1]
-{
+\makeatletter
+\newcommand{\showans@loop}[1]{%
+\forcsvlist{\showansone}{#1}%
+}
+\newcommand{\showans}[1][]{%
 \newpage
 \pagestyle{fancy}
 \fancyhead[L]{\empty}
@@ -2270,8 +2275,14 @@ Ta chọn đáp án \circEX{E}
 \begin{center}
 \textbf{\showansheader}
 \end{center}
+\def\@showans@tmp{#1}%
+\ifdefempty{\@showans@tmp}{%
+\expandafter\showans@loop\expandafter{\randombanklist}%
+}{%
 \forcsvlist{\showansone}{#1}%
+}%
 }
+\makeatother
 %Grid item renderers (tabular) - dùng etoolbox balanced conditionals
 \makeatletter
 \newcommand{\displayDSpattern}[1]{%
