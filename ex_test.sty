@@ -2082,7 +2082,10 @@ Ta chọn đáp án \circEX{E}
 \par\vspace{0.3cm}
 }%
 }
+\newif\ifmodedeactive
+\modedeactivefalse
 \newcommand{\modede}{%
+\modedeactivetrue
 \def\testname{%
 \begin{center}
 \setlength\fboxrule{1pt}%
@@ -2090,8 +2093,8 @@ Ta chọn đáp án \circEX{E}
 \fbox{\parbox{0.85\linewidth}{%
 \begin{center}
 {\Large\bfseries\MakeUppercase{\tieude}}\\[4pt]
-{\itshape (Thời gian làm bài \textbf{\thoigian} phút)}\\[2pt]
-\ifx\phude\empty\else{\phude}\fi
+{\itshape (Thời gian làm bài \textbf{\thoigian} phút)}%
+\ifx\phude\empty\else\\[2pt]{\phude}\fi
 \end{center}
 }}
 \end{center}
@@ -2115,11 +2118,30 @@ Ta chọn đáp án \circEX{E}
 \LARGE \textbf{ĐÁP ÁN}
 \end{center}
 }
+\newcounter{examcnt}
 %randombank
 \gdef\randombanklist{}
-\newcommand{\randombank}[1]{
-\gdef\randombanklist{#1}%
-\foreach \x in {#1} {%Danh sách mã đề
+\newcommand{\randombank}[1]{%
+\gdef\randombanklist{}%
+\edef\numexams{#1}%
+\ifdefempty{\numexams}{\def\numexams{1}}{}%
+\ifmodedeactive\def\numexams{1}\fi
+\foreach \i in {1,...,\numexams} {%Danh sách mã đề
+\stepcounter{examcnt}%
+\ifmodedeactive
+  \def\x{1}%
+\else
+  \def\getuniqueX{%
+    \pgfmathtruncatemacro{\x}{random(100,999)}%
+    \xifinlist{\x}{\randombanklist}{\getuniqueX}{}%
+  }%
+  \getuniqueX
+\fi
+\ifnum\i=1
+  \xdef\randombanklist{\x}%
+\else
+  \xdef\randombanklist{\randombanklist,\x}%
+\fi
 \newpage
 \pagestyle{fancy}
 \fancyhead[L]{\empty}
@@ -2128,8 +2150,12 @@ Ta chọn đáp án \circEX{E}
 \fancyfoot[C]{\empty}
 \renewcommand{\headrulewidth}{0pt}
 \renewcommand{\footrulewidth}{0.4pt}
-\fancyfoot[L]{Mã đề\ \x}
-\fancyfoot[R]{Trang \thepage/\pageref{\x}}
+\ifmodedeactive
+  \fancyfoot[L]{}%
+\else
+  \fancyfoot[L]{Mã đề\ \x}%
+\fi
+\fancyfoot[R]{Trang \thepage/\pageref{exam-\arabic{examcnt}}}
 \setcounter{page}{1}
 \setcounter{exrd}{0}
 \testname
@@ -2166,8 +2192,7 @@ Ta chọn đáp án \circEX{E}
 \immediate\closeout\tempfile
 \immediate\closeout\gridfile
 \gridwritingfalse
-\centerline{-\ -\ -\ -\ -\ -\ -\ -\ -\ -\ HẾT -\ -\ -\ -\ -\ -\ -\ -\ -\ -}
-\label{\x}
+\centerline{-\ -\ -\ -\ -\ -\ -\ -\ -\ -\ HẾT -\ -\ -\ -\ -\ -\ -\ -\ -\ -\label{exam-\arabic{examcnt}}}
 \newpage
 }
 }
@@ -2179,11 +2204,17 @@ Ta chọn đáp án \circEX{E}
 \par\vspace{6pt}%
 }
 \newcommand{\showansfull@do}[1]{%
+\ifmodedeactive
+\begin{center}
+\textbf{\LARGE ĐÁP ÁN CHI TIẾT}
+\end{center}
+\else
 \rightline{%
 \setlength\fboxrule{0.6pt}%
 \setlength\fboxsep{5pt}%
 \fbox{\textbf{ĐÁP ÁN CHI TIẾT MÃ ĐỀ #1}}%
 }%
+\fi
 \begingroup
 %Hiển thị đáp án đúng bằng màu
 \def\colorEX{\color{red}}%
@@ -2263,6 +2294,7 @@ Ta chọn đáp án \circEX{E}
 \def\appendMCtable#1{\expandafter\gdef\expandafter\gridMCtablebody\expandafter{\gridMCtablebody#1}}%
 \newcommand{\showgridMC}{%
 \par\vspace{6pt}\noindent\textbf{\color{blue!80!black}\gridlabelMC}%
+\ifdefempty{\examcodebox}{}{\examcodebox\gdef\examcodebox{}}%
 \par\vspace{3pt}\noindent%
 \setcounter{gridMCcol}{0}%
 \gridMClist%store all items in indexed macros
@@ -2334,6 +2366,7 @@ Ta chọn đáp án \circEX{E}
 }
 \newcommand{\showgridTF}{%
 \par\vspace{6pt}\noindent\textbf{\color{blue!80!black}\gridlabelTF}%
+\ifdefempty{\examcodebox}{}{\examcodebox\gdef\examcodebox{}}%
 \par\vspace{3pt}\noindent\setcounter{gridTFrow}{0}%
 \gdef\gridTFsep{}%
 \setlength{\gridTFcw}{\dimexpr(\linewidth-5\arrayrulewidth)/4-2\tabcolsep\relax}%
@@ -2345,6 +2378,7 @@ Ta chọn đáp án \circEX{E}
 }
 \newcommand{\showgridSA}{%
 \par\vspace{6pt}\noindent\textbf{\color{blue!80!black}\gridlabelSA}%
+\ifdefempty{\examcodebox}{}{\examcodebox\gdef\examcodebox{}}%
 \par\vspace{3pt}\noindent\setcounter{gridSArow}{0}%
 \gdef\gridSAsep{}%
 \setlength{\gridSAcw}{\dimexpr(\linewidth-7\arrayrulewidth)/6-2\tabcolsep\relax}%
@@ -2359,13 +2393,20 @@ Ta chọn đáp án \circEX{E}
 \ifdefempty{\gridTFlist}{}{\showgridTF}%
 \ifdefempty{\gridSAlist}{}{\showgridSA}%
 }
+\newcounter{ansgridcnt}
+\newcounter{ansgridonpage}
 %Handler cho từng mã đề trong showans (dùng \forcsvlist thay \foreach để tránh lỗi \ifnum)
 \newcommand{\showansone}[1]{%
-\rightline{%
-\setlength\fboxrule{0.6pt}%
-\setlength\fboxsep{5pt}%
-\fbox{\textbf{Mã đề #1}}%
-}%
+\ifmodedeactive
+  \gdef\examcodebox{}%
+\else
+  \gdef\examcodebox{%
+    \hfill
+    \setlength\fboxrule{0.6pt}%
+    \setlength\fboxsep{5pt}%
+    \fbox{\textbf{Mã đề #1}}%
+  }%
+\fi
 \gdef\gridMClist{}%
 \gdef\gridTFlist{}%
 \gdef\gridSAlist{}%
@@ -2374,13 +2415,27 @@ Ta chọn đáp án \circEX{E}
 \setcounter{gridSAn}{0}%
 \IfFileExists{ans/grid#1.tex}{\input{ans/grid#1.tex}}{}%
 \showgridone
-\vspace{0.3cm}%
+\stepcounter{ansgridcnt}%
+\stepcounter{ansgridonpage}%
+\ifnum\value{ansgridcnt}=2
+  \newpage
+  \setcounter{ansgridonpage}{0}%
+\else
+  \ifnum\value{ansgridonpage}=3
+    \newpage
+    \setcounter{ansgridonpage}{0}%
+  \else
+    \vspace{0.3cm}%
+  \fi
+\fi
 }
 \makeatletter
 \newcommand{\showans@loop}[1]{%
 \forcsvlist{\showansone}{#1}%
 }
 \newcommand{\showans}[1][]{%
+\setcounter{ansgridcnt}{0}%
+\setcounter{ansgridonpage}{0}%
 \newpage
 \pagestyle{fancy}
 \fancyhead[L]{\empty}
