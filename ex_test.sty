@@ -1,4 +1,4 @@
-﻿\ProvidesPackage{ex_test}[2018/06/15 for Ex_test version 2.4.3, Tran Anh Tuan]
+\ProvidesPackage{ex_test}[2018/06/15 for Ex_test version 2.4.3, Tran Anh Tuan]
 \RequirePackage{ifthen}
 \RequirePackage{fancyhdr}
 \RequirePackage{multicol}
@@ -1655,9 +1655,9 @@ Ta chọn đáp án \circEX{E}
     \pgfmathrandomitem\mixorderidx{mixorder}%
     \xdef\mixorderidx{\mixorderidx}%
     \prunelist{mixorder}%
-    \edef\mixcursrc{\csname mixitem@\mixorderidx @src\endcsname}%
-    \edef\mixcurq{\csname mixitem@\mixorderidx @q\endcsname}%
-    \edef\mixcurfile{\csname mixsrc@\mixcursrc @file\endcsname}%
+    \xdef\mixcursrc{\csname mixitem@\mixorderidx @src\endcsname}%
+    \xdef\mixcurq{\csname mixitem@\mixorderidx @q\endcsname}%
+    \xdef\mixcurfile{\csname mixsrc@\mixcursrc @file\endcsname}%
     \expandafter\CatchFileDef\expandafter\bank\expandafter{\mixcurfile}{}%
     \setcounter{ex}{0}%
     \RenewEnviron{ex}{%
@@ -1672,7 +1672,15 @@ Ta chọn đáp án \circEX{E}
   \resetmixbank%
   \fi
 }
-\pgfmathsetseed{\number\pdfrandomseed}
+\ifdefined\pdfrandomseed
+  \pgfmathsetseed{\number\pdfrandomseed}
+\else
+  \ifdefined\randomseed
+    \pgfmathsetseed{\number\randomseed}
+  \else
+    \pgfmathsetseed{\number\time}
+  \fi
+\fi
 %Lệnh tạo ngẫu nhiên 4 phương án (dùng trong trộn đề)
 \newcommand{\InitVariables}
 {\pgfmathsetmacro{\randomEX}{int(random(1,24))}}
@@ -2122,26 +2130,13 @@ Ta chọn đáp án \circEX{E}
 %randombank
 \gdef\randombanklist{}
 \newcommand{\randombank}[1]{%
-\gdef\randombanklist{}%
-\edef\numexams{#1}%
-\ifdefempty{\numexams}{\def\numexams{1}}{}%
-\ifmodedeactive\def\numexams{1}\fi
-\foreach \i in {1,...,\numexams} {%Danh sách mã đề
-\stepcounter{examcnt}%
 \ifmodedeactive
-  \def\x{1}%
+  \gdef\randombanklist{0101}%
 \else
-  \def\getuniqueX{%
-    \pgfmathtruncatemacro{\x}{random(100,999)}%
-    \xifinlist{\x}{\randombanklist}{\getuniqueX}{}%
-  }%
-  \getuniqueX
+  \gdef\randombanklist{#1}%
 \fi
-\ifnum\i=1
-  \xdef\randombanklist{\x}%
-\else
-  \xdef\randombanklist{\randombanklist,\x}%
-\fi
+\foreach \x in \randombanklist {%Danh sách mã đề
+\stepcounter{examcnt}%
 \newpage
 \pagestyle{fancy}
 \fancyhead[L]{\empty}
@@ -2227,8 +2222,7 @@ Ta chọn đáp án \circEX{E}
 \begin{center}%
 \textbf{\textit{Lời giải}}%
 \end{center}%
-\par\noindent ##1%
-\hfill\qedEX\par%
+\par\noindent ##1\par%
 }%
 \renewcommand{\loigiaiRD}[1]{\loigiai{##1}}%
 \renewcommand{\shortsol}[1]{}%
